@@ -1,5 +1,5 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'http://localhost:3000', // your Node/Express backend URL
+  baseURL: 'https://simple-mern-proj.onrender.com', // your Node/Express backend URL
 });
