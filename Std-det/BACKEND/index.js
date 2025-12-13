@@ -32,6 +32,62 @@ const login = new mongoose.Schema({
 
 const log = mongoose.model('log',login);
 
+//jwt
+const authtoken = (req,res,next)=>{
+const head = req.headers['authorization'];
+const token = head && head.split(' ')[1];
+
+if(!token) return res.status(401).json({error:'Invalid-Tocken'});
+jwt.verify(token,process.env.jwt-key, (err,data)=>{
+    if(err) return res.status(403).json({error:'Invalid-Tocken'})
+        req.data=data;
+    next();
+})
+}
+
+//reg
+app.post('/auth/reg', async(req,res)=>{
+    try{
+    const {name,pass}=req.body;
+    const hashpass=await bcrypt.hash(pass, 10);
+    const user = new log({name, Password : hashpass});
+    await user.save();
+    res.status(201).json({mess:'Successfully'})
+    }
+    catch(err){
+        res.status(400).json({error:err.message});
+    }
+});
+
+//login
+app.post('/auth/login',async(req,res)=>{
+    try{
+        const {name,pass}=req.body;
+        const user = await log.findOne({name});
+        if(!user || !await bcrypt.compare(pass,user.Password)){
+            return res.status(400).json({error:'Invalid person'});
+        }
+
+        const tocken= jwt.sign(
+            {name:user.name , id:user._id},
+            process.env.jwt-key,
+            {expiresIn: '1h'}
+        );
+
+        res.json(
+            {
+                mess:'Logged-in',
+                tocken,
+                user:{name:user.name,id:user._id}
+            }
+        )
+
+    }
+    catch(e){
+        res.status(500).json({error:e.message});
+    }
+});
+
 //Rest-API's
 //ADD
 app.post('/std-det',async (req,res)=>{
